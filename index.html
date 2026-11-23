@@ -34,6 +34,7 @@
   <div class="container site-header__inner">
     <a class="wordmark" href="#hero" aria-label="Salon Dominique – Best for Body, na začátek stránky">
       <span class="wordmark__line"><span class="wordmark__salon">Salon</span> <span class="wordmark__name">Dominique</span></span>
+      <svg class="swoosh" viewBox="0 0 200 12" aria-hidden="true" focusable="false"><path d="M70 9.5C112 12.5 160 10 199 1.2 162 8.8 114 11 70 9.5Z"/></svg>
       <span class="wordmark__tag">Best <b>for</b> Body</span>
     </a>
 
@@ -62,7 +63,7 @@
     <div class="container hero__inner">
       <div class="hero__text">
         <p class="hero__kicker hero__anim" style="--d:.05s">Kosmetický salon a péče o tělo</p>
-        <h1 class="hero__title hero__anim" id="hero-title" style="--d:.12s">Tělo, pleť, vlasy.<br>Na Široké v&nbsp;Říčanech.</h1>
+        <h1 class="hero__title hero__anim" id="hero-title" style="--d:.12s">Tělo, pleť, vlasy.<br>Na Široké <span class="hero__mark">v&nbsp;Říčanech.<svg class="hero__swoosh" viewBox="0 0 320 22" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path pathLength="1" d="M4 15C90 21 210 19 316 4"/></svg></span></h1>
         <p class="hero__lead hero__anim" style="--d:.24s">Kosmetika, přístrojové procedury na tělo, kadeřnictví, masáže i&nbsp;pedikúra v&nbsp;jednom salonu. Před ošetřením si s&nbsp;vámi zdarma promluvíme o&nbsp;tom, co je pro vás vhodné.</p>
         <div class="hero__actions hero__anim" style="--d:.36s">
           <a class="btn btn--primary" href="#rezervace">Rezervovat termín</a>
@@ -136,19 +137,38 @@
         <p class="kryo__lead">Nechirurgická metoda tvarování postavy pomocí chladu. Ošetření nenarušuje pokožku a&nbsp;samotný zákrok trvá 40 až 60 minut. Po proceduře se můžete hned vrátit ke svému běžnému dni – během ošetření si klidně čtěte nebo telefonujte.</p>
         <p class="kryo__lead">Zda je metoda pro vás vhodná, probereme předem na konzultaci zdarma.</p>
 
-        <table class="price-table">
-          <caption>Ceník</caption>
-          <thead>
-            <tr><th scope="col">Počet aplikací</th><th scope="col">Cena</th><th scope="col">Za aplikaci</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>2</td><td>920 Kč</td><td>460 Kč</td></tr>
-            <tr><td>4</td><td>1 820 Kč</td><td>455 Kč</td></tr>
-            <tr><td>6</td><td>2 600 Kč</td><td>433 Kč</td></tr>
-            <tr><td>8</td><td>3 400 Kč</td><td>425 Kč</td></tr>
-            <tr><td>10</td><td>3 900 Kč</td><td>390 Kč</td></tr>
-          </tbody>
-        </table>
+        <div class="calc">
+          <p class="calc__label" id="calc-label">Kolik aplikací plánujete?</p>
+          <div class="calc__opts" role="radiogroup" aria-labelledby="calc-label">
+            <label class="calc__opt"><input class="visually-hidden" type="radio" name="kryo" value="2"><span>2</span></label>
+            <label class="calc__opt"><input class="visually-hidden" type="radio" name="kryo" value="4"><span>4</span></label>
+            <label class="calc__opt"><input class="visually-hidden" type="radio" name="kryo" value="6" checked><span>6</span></label>
+            <label class="calc__opt"><input class="visually-hidden" type="radio" name="kryo" value="8"><span>8</span></label>
+            <label class="calc__opt"><input class="visually-hidden" type="radio" name="kryo" value="10"><span>10</span></label>
+          </div>
+          <output class="calc__out" id="calc-out" for="calc-label" aria-live="polite">
+            <span class="calc__price" id="calc-price">2 600 Kč</span>
+            <span class="calc__per" id="calc-per">433 Kč za jednu aplikaci</span>
+            <span class="calc__save" id="calc-save">Oproti trojímu zakoupení balíčku 2 aplikací ušetříte 160 Kč.</span>
+          </output>
+        </div>
+
+        <details class="calc__table">
+          <summary>Celý ceník kryolipolýzy</summary>
+          <table class="price-table">
+            <caption class="visually-hidden">Ceník kryolipolýzy</caption>
+            <thead>
+              <tr><th scope="col">Počet aplikací</th><th scope="col">Cena</th><th scope="col">Za aplikaci</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>2</td><td>920 Kč</td><td>460 Kč</td></tr>
+              <tr><td>4</td><td>1 820 Kč</td><td>455 Kč</td></tr>
+              <tr><td>6</td><td>2 600 Kč</td><td>433 Kč</td></tr>
+              <tr><td>8</td><td>3 400 Kč</td><td>425 Kč</td></tr>
+              <tr><td>10</td><td>3 900 Kč</td><td>390 Kč</td></tr>
+            </tbody>
+          </table>
+        </details>
         <a class="btn btn--light" href="#rezervace" data-preselect="Kryolipolýza">Rezervovat kryolipolýzu</a>
       </div>
     </div>
@@ -160,10 +180,10 @@
       <div class="booking__aside reveal">
         <h2 class="section__title" id="booking-title">Rezervace online</h2>
         <p class="section__lead">Vyberte službu, den a čas. Bez telefonování a&nbsp;bez čekání, až se vám salon ozve.</p>
+        <div class="appt appt--live" id="appt-live" aria-hidden="true"></div>
         <dl class="booking__facts">
           <div><dt>Otevřeno</dt><dd>Po–Pá 10:00–17:00</dd></div>
           <div><dt>Jindy</dt><dd>po domluvě na <a href="tel:+420608132440">608 132 440</a></dd></div>
-          <div><dt>Storno</dt><dd>nejpozději 24 h předem</dd></div>
         </dl>
       </div>
 
@@ -238,8 +258,8 @@
 
           <div class="step step--done" data-step="5" hidden>
             <h3 class="step__title" tabindex="-1">Rezervace je zapsaná</h3>
-            <p class="step__sub">Takhle by vypadalo potvrzení. V&nbsp;ostré verzi by vám přišel e-mail a&nbsp;salon by termín viděl ve svém kalendáři.</p>
-            <dl class="summary" id="summary"></dl>
+            <p class="step__sub">Takhle by vypadalo potvrzení – i&nbsp;s&nbsp;objednací kartičkou. V&nbsp;ostré verzi by vám přišel e-mail a&nbsp;salon by termín viděl ve svém kalendáři.</p>
+            <div class="appt appt--done" id="appt-done"></div>
             <div class="done__actions">
               <button type="button" class="btn btn--primary" id="ics-btn">Uložit do kalendáře</button>
               <button type="button" class="link-arrow" id="restart-btn">Nová rezervace</button>
@@ -258,15 +278,30 @@
     </div>
   </section>
 
-  <!-- 6. GALERIE -->
-  <section class="section gallery" id="galerie" aria-labelledby="gal-title">
+  <!-- 6. GALERIE: PROHLÍDKA SALONU -->
+  <section class="section tour" id="galerie" aria-labelledby="gal-title">
     <div class="container">
       <div class="section__head section__head--split reveal">
-        <h2 class="section__title" id="gal-title">Prostory salonu</h2>
-        <p class="section__lead">Recepce, kadeřnictví, kosmetika, pedikúra a&nbsp;ošetřovny pro tělové procedury.</p>
+        <h2 class="section__title" id="gal-title">Projděte se salonem</h2>
+        <p class="section__lead">Od výlohy na Široké až do ošetřovny – místnost po místnosti. Klikněte na fotku a&nbsp;uvidíte, jak to tam vypadá.</p>
       </div>
-      <ul class="photo-grid" id="gallery-grid"></ul>
-      <button type="button" class="link-arrow gallery__more" id="gallery-more" aria-expanded="false">Zobrazit všech 21 fotografií</button>
+      <div class="tour__bar">
+        <p class="tour__count" aria-hidden="true"><span id="tour-now">01</span> / <span id="tour-total">09</span></p>
+        <div class="tour__nav">
+          <button type="button" class="icon-btn" id="tour-prev" aria-label="Předchozí místnost"><svg class="icon" aria-hidden="true"><use href="#i-chev"/></svg></button>
+          <button type="button" class="icon-btn icon-btn--flip" id="tour-next" aria-label="Další místnost"><svg class="icon" aria-hidden="true"><use href="#i-chev"/></svg></button>
+        </div>
+      </div>
+    </div>
+    <div class="tour__track" id="tour-track" tabindex="0" role="region" aria-label="Prohlídka salonu, posouvejte do strany">
+      <ol class="tour__list" id="tour-list"></ol>
+    </div>
+    <div class="container">
+      <div class="tour__progress" aria-hidden="true"><span id="tour-progress"></span></div>
+      <button type="button" class="link-arrow gallery__more" id="gallery-more" aria-expanded="false" aria-controls="all-photos">Všechny fotografie v mřížce (21)</button>
+      <div id="all-photos" hidden>
+        <ul class="photo-grid" id="gallery-grid"></ul>
+      </div>
     </div>
   </section>
 
@@ -297,6 +332,7 @@
           <header class="gift__head">
             <span class="wordmark wordmark--small" aria-hidden="true">
               <span class="wordmark__line"><span class="wordmark__salon">Salon</span> <span class="wordmark__name">Dominique</span></span>
+      <svg class="swoosh" viewBox="0 0 200 12" aria-hidden="true" focusable="false"><path d="M70 9.5C112 12.5 160 10 199 1.2 162 8.8 114 11 70 9.5Z"/></svg>
               <span class="wordmark__tag">Best <b>for</b> Body</span>
             </span>
             <span class="gift__no">č. 0001</span>
@@ -330,6 +366,13 @@
       <div class="contact__hours reveal">
         <h3 class="contact__sub">Otevírací doba</h3>
         <p class="status" id="open-status" aria-live="polite"><span class="status-dot" aria-hidden="true"></span><span data-open-status>Po–Pá 10:00–17:00</span></p>
+        <div class="dayline" id="dayline" aria-hidden="true">
+          <div class="dayline__rail">
+            <span class="dayline__open"></span>
+            <span class="dayline__now" id="dayline-now"><i>teď</i></span>
+          </div>
+          <div class="dayline__ticks"><span style="left:0">7:00</span><span style="left:23.08%">10:00</span><span style="left:76.92%">17:00</span><span style="left:100%">20:00</span></div>
+        </div>
         <table class="hours">
           <caption class="visually-hidden">Otevírací doba po dnech</caption>
           <tbody>
@@ -353,6 +396,7 @@
     <div>
       <span class="wordmark wordmark--invert" aria-hidden="true">
         <span class="wordmark__line"><span class="wordmark__salon">Salon</span> <span class="wordmark__name">Dominique</span></span>
+      <svg class="swoosh" viewBox="0 0 200 12" aria-hidden="true" focusable="false"><path d="M70 9.5C112 12.5 160 10 199 1.2 162 8.8 114 11 70 9.5Z"/></svg>
         <span class="wordmark__tag">Best <b>for</b> Body</span>
       </span>
       <p class="footer__addr">Široká 16/6, 251 01 Říčany u Prahy<br>

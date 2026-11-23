@@ -73,10 +73,25 @@
     [21, "Ošetřovna s policemi a lehátkem", "wide"],
   ].map(([n, alt, shape]) => {
     const id = String(n).padStart(2, "0");
+    const no = n;
     const tall = n === 10 || n === 16;
-    return { full: `assets/gallery/salon-${id}.webp`, thumb: `assets/gallery/salon-${id}-thumb.webp`, alt, tall, wide: shape === "wide", w: tall ? 480 : 640, h: tall ? 640 : 480 };
+    return { full: `assets/gallery/salon-${id}.webp`, thumb: `assets/gallery/salon-${id}-thumb.webp`, alt, no, tall, wide: shape === "wide", w: tall ? 480 : 640, h: tall ? 640 : 480 };
   });
-  const GALLERY_INITIAL = 8;
+  const GALLERY_INITIAL = GALLERY.length;
+  const byNo = Object.fromEntries(GALLERY.map((g, i) => [g.no, i]));
+
+  // Místnosti – pořadí odpovídá cestě od vchodu. Přiřazení fotek vychází z jejich názvů na současném webu salonu.
+  const ROOMS = [
+    { name: "Výloha a vchod", what: "Široká 16/6, vchod přímo z ulice.", photos: [1] },
+    { name: "Recepce", what: "Tady vás přivítáme, nabídneme nápoj a probereme, co je pro vás vhodné.", photos: [2, 3, 4] },
+    { name: "Chodba a posezení", what: "Chvilka na vydechnutí před ošetřením.", photos: [5, 6] },
+    { name: "Kadeřnictví", what: "Střih, barvení a úprava vlasů.", photos: [8, 9, 11] },
+    { name: "Kosmetika", what: "Kosmetika a péče o pleť.", photos: [20, 18, 19, 21] },
+    { name: "Řasy a permanentní make-up", what: "Prodlužování řas a permanentní make-up.", photos: [12, 13] },
+    { name: "Pedikúra", what: "Péče o chodidla a nehty.", photos: [10, 7] },
+    { name: "Masáže", what: "Masáže a masáž nohou.", photos: [14] },
+    { name: "Ošetřovna pro tělo", what: "Přístrojové procedury – kryolipolýza a další.", photos: [15, 16, 17] },
+  ];
 
   const MONTHS = ["leden", "únor", "březen", "duben", "květen", "červen", "červenec", "srpen", "září", "říjen", "listopad", "prosinec"];
   const DAYS = ["neděle", "pondělí", "úterý", "středa", "čtvrtek", "pátek", "sobota"];
@@ -218,9 +233,33 @@
     $$("[data-open-status]").forEach((el) => (el.textContent = text));
     root.classList.toggle("is-open-now", open);
     $$(".hours tr").forEach((tr) => tr.classList.toggle("is-today", Number(tr.dataset.day) === day));
+    const now = $("#dayline-now");
+    const START = 420, SPAN = 780; // 7:00–20:00
+    const inRange = mins >= START && mins <= START + SPAN;
+    $("#dayline").classList.toggle("is-weekend", !weekday);
+    now.hidden = !inRange;
+    if (inRange) now.style.left = `${((mins - START) / SPAN) * 100}%`;
   };
   updateOpenStatus();
   setInterval(updateOpenStatus, 60 * 1000);
+
+  /* ------------------------------------------------------------------
+     KRYOLIPOLÝZA – KALKULAČKA (ceny z webu salonu)
+  ------------------------------------------------------------------ */
+  const KRYO = { 2: 920, 4: 1820, 6: 2600, 8: 3400, 10: 3900 };
+  const DATIV = { 2: "dvěma", 3: "třem", 4: "čtyřem", 5: "pěti" };
+  const kc = (n) => `${n.toLocaleString("cs-CZ").replace(/\s/g, "\u00a0")}\u00a0Kč`;
+  const updateCalc = (n) => {
+    const price = KRYO[n];
+    $("#calc-price").textContent = kc(price);
+    $("#calc-per").textContent = `${kc(Math.round(price / n))} za jednu aplikaci`;
+    const packs = n / 2, save = packs * KRYO[2] - price;
+    $("#calc-save").textContent = n === 2
+      ? "Nejmenší balíček – dobrý začátek po konzultaci."
+      : `Oproti ${DATIV[packs]} balíčkům po 2 aplikacích ušetříte ${kc(save)}.`;
+  };
+  $(".calc__opts").addEventListener("change", (e) => updateCalc(Number(e.target.value)));
+  updateCalc(Number($(".calc__opts input:checked").value));
 
   /* ------------------------------------------------------------------
      REZERVAČNÍ PRŮVODCE (DEMO – nic se neodesílá)
@@ -368,19 +407,33 @@
   };
   form.addEventListener("submit", (e) => { e.preventDefault(); goNext(); });
 
-  /* Krok 5 – shrnutí */
-  const renderSummary = () => {
-    const c = state.contact;
-    const rows = [
-      ["Služba", state.service],
-      ["Datum", `${fmtDateLong(state.date)} ${state.date.getFullYear()}`],
-      ["Čas", fmtTime(state.time)],
-      ["Jméno", c.name],
-      ["Telefon", c.phone],
-      ["Místo", "Široká 16/6, Říčany"],
-    ];
-    $("#summary").innerHTML = rows.map(([k, v]) => `<dt>${k}</dt><dd>${esc(v)}</dd>`).join("");
+  /* Objednací kartička – vyplňuje se průběžně (jako papírová kartička z recepce) */
+  const SWOOSH = '<svg class="swoosh" viewBox="0 0 200 12" aria-hidden="true" focusable="false"><path d="M70 9.5C112 12.5 160 10 199 1.2 162 8.8 114 11 70 9.5Z"/></svg>';
+  let lastAppt = {};
+  const apptHTML = () => {
+    const v = {
+      service: state.service,
+      day: state.date && `${fmtDateLong(state.date)}`,
+      time: state.time != null && fmtTime(state.time),
+      name: state.contact && state.contact.name,
+    };
+    const row = (key, label) => {
+      const changed = v[key] && v[key] !== lastAppt[key];
+      return `<div class="appt__row${changed ? " is-new" : ""}"><dt>${label}</dt><dd>${v[key] ? esc(v[key]) : ""}</dd></div>`;
+    };
+    const out = `
+      <div class="appt__head">
+        <span class="wordmark wordmark--small"><span class="wordmark__line"><span class="wordmark__salon">Salon</span> <span class="wordmark__name">Dominique</span></span>${SWOOSH}<span class="wordmark__tag">Best <b>for</b> Body</span></span>
+        <span class="appt__kind">Objednací kartička</span>
+      </div>
+      <dl class="appt__rows">${row("service", "Služba")}${row("day", "Den")}${row("time", "Čas")}${row("name", "Jméno")}</dl>
+      <p class="appt__note">Nemůžete-li přijít, omluvte se prosím alespoň 24&nbsp;h předem.</p>
+      <p class="appt__addr">Široká 16/6, Říčany · 608 132 440</p>`;
+    lastAppt = v;
+    return out;
   };
+  const renderAppt = () => { $("#appt-live").innerHTML = apptHTML(); };
+  const renderSummary = () => { lastAppt = {}; $("#appt-done").innerHTML = apptHTML(); };
 
   $("#ics-btn").addEventListener("click", () => {
     const d = state.date, pad = (n) => String(n).padStart(2, "0");
@@ -419,6 +472,7 @@
     nextBtn.disabled = !canProceed();
     const parts = [state.service, state.date && `${DAYS_SHORT[state.date.getDay()]} ${state.date.getDate()}. ${state.date.getMonth() + 1}.`, state.time != null && fmtTime(state.time)].filter(Boolean);
     pickEl.textContent = state.step < 5 ? parts.join(" · ") : "";
+    renderAppt();
   };
 
   const goTo = (n, { focus = true } = {}) => {
@@ -442,6 +496,7 @@
     }
     if (n === 3) renderTimes();
     if (n === 5) renderSummary();
+    bookingSection.classList.toggle("is-done", n === 5);
     foot.hidden = n === 5;
     backBtn.hidden = n === 1;
     nextBtn.textContent = n === 4 ? "Potvrdit rezervaci" : "Pokračovat";
@@ -489,57 +544,111 @@
   ------------------------------------------------------------------ */
   const grid = $("#gallery-grid");
   grid.innerHTML = GALLERY.map((g, i) => `
-    <li class="${i === 0 ? "is-feature" : g.tall ? "is-tall" : g.wide ? "is-wide" : ""}" ${i >= GALLERY_INITIAL ? "hidden" : ""}>
+    <li class="${i === 0 ? "is-feature" : g.tall ? "is-tall" : g.wide ? "is-wide" : ""}">
       <button type="button" class="g-item" data-index="${i}" aria-label="Zvětšit fotku: ${esc(g.alt)}">
         <img src="${i === 0 ? g.full : g.thumb}" width="${g.w}" height="${g.h}" alt="${esc(g.alt)}" loading="lazy" decoding="async">
       </button>
     </li>`).join("");
 
   const moreBtn = $("#gallery-more");
+  const allPhotos = $("#all-photos");
   moreBtn.addEventListener("click", () => {
-    const expand = moreBtn.getAttribute("aria-expanded") !== "true";
-    $$("li", grid).forEach((li, i) => { if (i >= GALLERY_INITIAL) li.hidden = !expand; });
+    const expand = allPhotos.hidden;
+    allPhotos.hidden = !expand;
     moreBtn.setAttribute("aria-expanded", String(expand));
-    moreBtn.textContent = expand ? "Zobrazit méně" : `Zobrazit všech ${GALLERY.length} fotografií`;
-    if (expand) $$(".g-item", grid)[GALLERY_INITIAL].focus();
+    moreBtn.textContent = expand ? "Skrýt mřížku fotografií" : `Všechny fotografie v mřížce (${GALLERY.length})`;
   });
 
+  // Prohlídka salonu
+  const tourList = $("#tour-list");
+  const tourTrack = $("#tour-track");
+  const pad2 = (n) => String(n).padStart(2, "0");
+  tourList.innerHTML = ROOMS.map((r, i) => {
+    const g = GALLERY[byNo[r.photos[0]]];
+    const count = r.photos.length;
+    return `
+    <li class="room">
+      <button type="button" class="room__photo" data-room="${i}" aria-label="${esc(r.name)} – zobrazit ${count === 1 ? "fotografii" : `${count} fotografie`}">
+        <img src="${g.full}" width="${g.w}" height="${g.h}" alt="${esc(g.alt)}" loading="lazy" decoding="async">
+        ${count > 1 ? `<span class="room__count" aria-hidden="true">${count} foto</span>` : ""}
+      </button>
+      <p class="room__no" aria-hidden="true">${pad2(i + 1)}</p>
+      <h3 class="room__name">${esc(r.name)}</h3>
+      <p class="room__what">${esc(r.what)}</p>
+    </li>`;
+  }).join("");
+  $("#tour-total").textContent = pad2(ROOMS.length);
+
+  const rooms = $$(".room", tourList);
+  const tourStep = (dir) => {
+    const w = rooms[0].getBoundingClientRect().width + parseFloat(getComputedStyle(tourList).columnGap || 16);
+    tourTrack.scrollBy({ left: dir * w, behavior: reduceMotion ? "auto" : "smooth" });
+  };
+  $("#tour-prev").addEventListener("click", () => tourStep(-1));
+  $("#tour-next").addEventListener("click", () => tourStep(1));
+  const onTour = () => {
+    const max = tourTrack.scrollWidth - tourTrack.clientWidth;
+    const p = max > 0 ? tourTrack.scrollLeft / max : 1;
+    $("#tour-progress").style.transform = `scaleX(${Math.max(0.06, p)})`;
+    const trackLeft = tourTrack.getBoundingClientRect().left;
+    let idx = 0;
+    rooms.forEach((r, i) => { if (r.getBoundingClientRect().left - trackLeft < r.offsetWidth * 0.5) idx = i; });
+    if (p > 0.995) idx = rooms.length - 1;
+    $("#tour-now").textContent = pad2(idx + 1);
+    $("#tour-prev").disabled = tourTrack.scrollLeft < 4;
+    $("#tour-next").disabled = tourTrack.scrollLeft > max - 4;
+  };
+  tourTrack.addEventListener("scroll", onTour, { passive: true });
+  window.addEventListener("resize", onTour);
+  onTour();
+
+  // Lightbox – pracuje se sadou fotek (celá galerie nebo jedna místnost)
   const lb = $("#lightbox");
   const lbImg = $("#lb-img");
-  let lbIndex = 0, lastFocus = null;
-  const showLb = (i) => {
-    lbIndex = (i + GALLERY.length) % GALLERY.length;
-    const g = GALLERY[lbIndex];
+  let lbSet = GALLERY.map((_, i) => i), lbPos = 0, lbTitle = "", lastFocus = null;
+  const showLb = (pos) => {
+    lbPos = (pos + lbSet.length) % lbSet.length;
+    const g = GALLERY[lbSet[lbPos]];
     lbImg.src = g.full; lbImg.alt = g.alt;
     $("#lb-cap").textContent = g.alt;
-    $("#lb-count").textContent = `${lbIndex + 1} / ${GALLERY.length}`;
-    // přednačtení sousedních
-    [lbIndex + 1, lbIndex - 1].forEach((j) => { const n = GALLERY[(j + GALLERY.length) % GALLERY.length]; new Image().src = n.full; });
+    $("#lb-count").textContent = `${lbTitle ? lbTitle + " · " : ""}${lbPos + 1} / ${lbSet.length}`;
+    const multi = lbSet.length > 1;
+    $("#lb-prev").hidden = !multi; $("#lb-next").hidden = !multi;
+    [lbPos + 1, lbPos - 1].forEach((j) => { new Image().src = GALLERY[lbSet[(j + lbSet.length) % lbSet.length]].full; });
+  };
+  const openLb = (set, pos, title, trigger) => {
+    lbSet = set; lbTitle = title || ""; lastFocus = trigger;
+    showLb(pos);
+    if (typeof lb.showModal === "function") lb.showModal(); else lb.setAttribute("open", "");
+    document.body.style.overflow = "hidden";
   };
   grid.addEventListener("click", (e) => {
     const b = e.target.closest(".g-item");
+    if (b) openLb(GALLERY.map((_, i) => i), Number(b.dataset.index), "", b);
+  });
+  tourList.addEventListener("click", (e) => {
+    const b = e.target.closest(".room__photo");
     if (!b) return;
-    lastFocus = b;
-    showLb(Number(b.dataset.index));
-    if (typeof lb.showModal === "function") lb.showModal(); else lb.setAttribute("open", "");
-    document.body.style.overflow = "hidden";
+    const r = ROOMS[Number(b.dataset.room)];
+    openLb(r.photos.map((n) => byNo[n]), 0, r.name, b);
   });
   const closeLb = () => { if (lb.open) lb.close(); };
   lb.addEventListener("close", () => { document.body.style.overflow = ""; lastFocus && lastFocus.focus(); });
   $("#lb-close").addEventListener("click", closeLb);
-  $("#lb-prev").addEventListener("click", () => showLb(lbIndex - 1));
-  $("#lb-next").addEventListener("click", () => showLb(lbIndex + 1));
+  $("#lb-prev").addEventListener("click", () => showLb(lbPos - 1));
+  $("#lb-next").addEventListener("click", () => showLb(lbPos + 1));
   lb.addEventListener("click", (e) => { if (e.target === lb) closeLb(); });
   lb.addEventListener("keydown", (e) => {
-    if (e.key === "ArrowLeft") showLb(lbIndex - 1);
-    if (e.key === "ArrowRight") showLb(lbIndex + 1);
+    if (lbSet.length < 2) return;
+    if (e.key === "ArrowLeft") showLb(lbPos - 1);
+    if (e.key === "ArrowRight") showLb(lbPos + 1);
   });
   let touchX = null;
   lb.addEventListener("touchstart", (e) => { touchX = e.touches[0].clientX; }, { passive: true });
   lb.addEventListener("touchend", (e) => {
-    if (touchX == null) return;
+    if (touchX == null || lbSet.length < 2) return;
     const dx = e.changedTouches[0].clientX - touchX;
-    if (Math.abs(dx) > 50) showLb(lbIndex + (dx < 0 ? 1 : -1));
+    if (Math.abs(dx) > 50) showLb(lbPos + (dx < 0 ? 1 : -1));
     touchX = null;
   });
 
