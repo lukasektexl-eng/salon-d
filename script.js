@@ -10,6 +10,14 @@
   /* ------------------------------------------------------------------
      DATA
   ------------------------------------------------------------------ */
+  const GROUP_IMG = {
+    telo: ["salon-17", "Ošetřovna s přístroji pro tělové procedury"],
+    plet: ["salon-20", "Kosmetická místnost s lehátkem"],
+    vlasy: ["salon-09", "Kadeřnictví se zrcadly a křesly"],
+    masaze: ["salon-14", "Místnost pro masáže"],
+    rasy: ["salon-12", "Lehátko s lampou pro řasy a permanentní make-up"],
+    dalsi: ["salon-05", "Chodba salonu s posezením a květinami"],
+  };
   const CATS = {
     telo: "Tělo",
     plet: "Pleť",
@@ -21,7 +29,7 @@
 
   // Popisky jsou záměrně neutrální – bez slibů výsledků. Ceny jen tam, kde je salon zveřejňuje.
   const SERVICES = [
-    { name: "Kryolipolýza", cat: "telo", icon: "snow", desc: "Nechirurgické tvarování postavy pomocí chladu. Zákrok trvá 40–60 minut.", price: "od <strong>920 Kč</strong>", anchor: "#kryolipolyza" },
+    { name: "Kryolipolýza", cat: "telo", icon: "snow", desc: "Nechirurgické tvarování postavy pomocí chladu. Zákrok trvá 40–60 minut.", price: "<small>od</small> 920 Kč" },
     { name: "Laserová lipolýza", cat: "telo", icon: "laser", desc: "Přístrojová procedura na tělo. Vhodnost probereme na konzultaci zdarma." },
     { name: "Přístrojová lymfodrenáž", cat: "telo", icon: "drops", desc: "Přístrojová lymfatická masáž, kterou lze kombinovat se zábalem." },
     { name: "Maderoterapie", cat: "telo", icon: "roller", desc: "Masážní technika s využitím tvarovaných dřevěných nástrojů." },
@@ -42,33 +50,33 @@
   ];
 
   const GALLERY = [
-    [2, "Recepce salonu s logem Salon Dominique – Best for Body"],
-    [15, "Ošetřovna s lehátkem a přístrojem pro tělové procedury"],
-    [10, "Křeslo pro pedikúru u okna"],
-    [8, "Kadeřnický mycí box s koženým křeslem"],
-    [5, "Chodba salonu s posezením a květinami"],
     [14, "Světlá místnost pro masáže"],
-    [20, "Kosmetická místnost s lehátkem a policemi s přípravky"],
-    [16, "Ošetřovna s lehátkem a přístroji, pohled na výšku"],
+    [10, "Křeslo pro pedikúru u okna"],
     [9, "Kadeřnictví se zrcadly a křesly"],
-    [3, "Recepce salonu s kyticí růží v popředí"],
-    [12, "Kosmetické lehátko s lampou"],
+    [20, "Kosmetická místnost s lehátkem a policemi s přípravky"],
+    [5, "Chodba salonu s posezením a květinami"],
+    [8, "Kadeřnický mycí box s koženým křeslem"],
+    [3, "Recepce s kyticí růží v popředí"],
+    [12, "Lehátko s lampou"],
+    [16, "Ošetřovna s lehátkem a přístroji"],
     [17, "Ošetřovna s přístroji a obrazem orchidejí"],
+    [15, "Ošetřovna s lehátkem a přístrojem pro tělové procedury"],
+    [2, "Recepce salonu s nápisem Salon Dominique – Best for Body"],
     [1, "Výloha a vchod do salonu z ulice"],
+    [6, "Dlouhá světlá chodba salonu", "wide"],
     [4, "Recepce s pultem a křeslem pro hosty"],
-    [6, "Dlouhá světlá chodba salonu"],
     [7, "Pracovní místo pro péči o nohy a nehty"],
-    [11, "Kadeřnický salon – celkový pohled"],
+    [11, "Kadeřnictví – celkový pohled"],
     [13, "Kosmetická místnost s lehátkem a zrcadlem"],
     [18, "Ošetřovna s paravánem a lehátkem"],
     [19, "Ošetřovna s lehátkem u okna"],
-    [21, "Ošetřovna s policemi a lehátkem"],
-  ].map(([n, alt]) => {
+    [21, "Ošetřovna s policemi a lehátkem", "wide"],
+  ].map(([n, alt, shape]) => {
     const id = String(n).padStart(2, "0");
     const tall = n === 10 || n === 16;
-    return { full: `assets/gallery/salon-${id}.webp`, thumb: `assets/gallery/salon-${id}-thumb.webp`, alt, w: tall ? 480 : 640, h: tall ? 640 : 480 };
+    return { full: `assets/gallery/salon-${id}.webp`, thumb: `assets/gallery/salon-${id}-thumb.webp`, alt, tall, wide: shape === "wide", w: tall ? 480 : 640, h: tall ? 640 : 480 };
   });
-  const GALLERY_INITIAL = 9;
+  const GALLERY_INITIAL = 8;
 
   const MONTHS = ["leden", "únor", "březen", "duben", "květen", "červen", "červenec", "srpen", "září", "říjen", "listopad", "prosinec"];
   const DAYS = ["neděle", "pondělí", "úterý", "středa", "čtvrtek", "pátek", "sobota"];
@@ -90,7 +98,7 @@
   const onScroll = () => {
     const y = window.scrollY;
     header.classList.toggle("is-scrolled", y > 24);
-    mobileCta.classList.toggle("is-visible", y > window.innerHeight * 0.6 && !bookingVisible);
+    mobileCta.classList.toggle("is-visible", y > window.innerHeight * 0.6 && !bookingVisible && !document.body.classList.contains("nav-open"));
   };
   window.addEventListener("scroll", onScroll, { passive: true });
   onScroll();
@@ -100,6 +108,7 @@
     burger.setAttribute("aria-label", open ? "Zavřít menu" : "Otevřít menu");
     nav.classList.toggle("is-open", open);
     document.body.classList.toggle("nav-open", open);
+    onScroll();
   };
   burger.addEventListener("click", () => setMenu(burger.getAttribute("aria-expanded") !== "true"));
   nav.addEventListener("click", (e) => { if (e.target.closest("a")) setMenu(false); });
@@ -111,53 +120,55 @@
   /* ------------------------------------------------------------------
      SLUŽBY + FILTR
   ------------------------------------------------------------------ */
-  const cardsEl = $("#service-cards");
-  cardsEl.innerHTML = SERVICES.map((s, i) => `
-    <li class="card reveal-card" data-cat="${s.cat}" style="--delay:${(i % 3) * 0.08}s">
-      <span class="card__icon">${icon(s.icon)}</span>
-      <span class="card__cat">${CATS[s.cat]}</span>
-      <h3 class="card__title">${esc(s.name)}</h3>
-      <p class="card__desc">${esc(s.desc)}</p>
-      <div class="card__foot">
-        ${s.price ? `<span class="card__price">${s.price}</span>` : `<span class="card__price card__price--todo">Ceník doplní salon</span>`}
-        <a class="card__link" href="#rezervace" data-preselect="${esc(s.name)}" aria-label="Rezervovat: ${esc(s.name)}">Rezervovat ${icon("arrow")}</a>
+  const menuEl = $("#service-menu");
+  const plural = (n) => (n === 1 ? "služba" : n < 5 ? "služby" : "služeb");
+  menuEl.innerHTML = Object.entries(CATS).map(([key, label]) => {
+    const items = SERVICES.filter((x) => x.cat === key);
+    const [img, alt] = GROUP_IMG[key];
+    return `
+    <section class="menu-group reveal" data-cat="${key}" aria-labelledby="mg-${key}">
+      <div class="menu-group__aside">
+        <img class="menu-group__img" src="assets/gallery/${img}-thumb.webp" width="640" height="480" alt="${esc(alt)}" loading="lazy" decoding="async">
+        <h3 class="menu-group__title" id="mg-${key}">${label}</h3>
+        <p class="menu-group__count">${items.length} ${plural(items.length)}</p>
       </div>
-    </li>`).join("");
+      <ul class="menu-list">
+        ${items.map((x) => `
+        <li class="menu-row">
+          <h4 class="menu-row__name">${esc(x.name)}</h4>
+          <p class="menu-row__desc">${esc(x.desc)}</p>
+          <div class="menu-row__end">
+            ${x.price ? `<span class="menu-row__price">${x.price}</span>` : ""}
+            <a class="menu-row__book" href="#rezervace" data-preselect="${esc(x.name)}" aria-label="Rezervovat: ${esc(x.name)}">Rezervovat ${icon("arrow")}</a>
+          </div>
+        </li>`).join("")}
+      </ul>
+    </section>`;
+  }).join("");
 
   const filterStatus = $("#filter-status");
-  $$(".chip").forEach((chip) => {
-    chip.addEventListener("click", () => {
-      const f = chip.dataset.filter;
-      $$(".chip").forEach((c) => { const on = c === chip; c.classList.toggle("is-active", on); c.setAttribute("aria-pressed", String(on)); });
-      const cards = $$(".card", cardsEl);
+  $$(".tab").forEach((tab) => {
+    tab.addEventListener("click", () => {
+      const f = tab.dataset.filter;
+      $$(".tab").forEach((t) => { const on = t === tab; t.classList.toggle("is-active", on); t.setAttribute("aria-pressed", String(on)); });
       let shown = 0;
-      cards.forEach((card) => {
-        const match = f === "all" || card.dataset.cat === f;
-        if (match) {
-          shown++;
-          card.hidden = false;
-          requestAnimationFrame(() => card.classList.remove("is-hiding"));
-        } else if (!card.hidden) {
-          card.classList.add("is-hiding");
-          setTimeout(() => { if (card.classList.contains("is-hiding")) card.hidden = true; }, reduceMotion ? 0 : 280);
-        }
+      $$(".menu-group", menuEl).forEach((g) => {
+        const match = f === "all" || g.dataset.cat === f;
+        g.hidden = !match;
+        if (match) { shown += $$(".menu-row", g).length; g.classList.add("is-in"); }
       });
-      filterStatus.textContent = `Zobrazeno ${shown} ${shown === 1 ? "služba" : shown < 5 ? "služby" : "služeb"}`;
+      filterStatus.textContent = `Zobrazeno ${shown} ${plural(shown)}`;
     });
   });
 
   /* ------------------------------------------------------------------
      ANIMACE PŘI SCROLLU + AKTIVNÍ POLOŽKA MENU
   ------------------------------------------------------------------ */
-  const revealEls = [...$$(".reveal"), ...$$(".reveal-card")];
-  const finishCard = (el) => {
-    if (!el.classList.contains("reveal-card")) return;
-    setTimeout(() => el.classList.remove("reveal-card", "is-in"), 1200);
-  };
+  const revealEls = $$(".reveal");
   if ("IntersectionObserver" in window && !reduceMotion) {
     const io = new IntersectionObserver((entries) => {
       entries.forEach((en) => {
-        if (en.isIntersecting) { en.target.classList.add("is-in"); finishCard(en.target); io.unobserve(en.target); }
+        if (en.isIntersecting) { en.target.classList.add("is-in"); io.unobserve(en.target); }
       });
     }, { rootMargin: "0px 0px -8% 0px", threshold: 0.08 });
     revealEls.forEach((el) => io.observe(el));
@@ -170,7 +181,7 @@
     }, { rootMargin: "-45% 0px -50% 0px" });
     ["sluzby", "kryolipolyza", "galerie", "poukaz", "kontakt"].forEach((id) => navIo.observe(document.getElementById(id)));
   } else {
-    revealEls.forEach((el) => el.classList.remove("reveal", "reveal-card"));
+    revealEls.forEach((el) => el.classList.remove("reveal"));
   }
 
   if ("IntersectionObserver" in window) {
@@ -205,8 +216,7 @@
     else if (weekday) text = day === 5 ? "Dnes už zavřeno · otevíráme v pondělí v 10:00" : "Dnes už zavřeno · zítra od 10:00";
     else text = "Dnes zavřeno · návštěva po domluvě";
     $$("[data-open-status]").forEach((el) => (el.textContent = text));
-    const st = $("#open-status");
-    st.classList.toggle("is-closed", !open);
+    root.classList.toggle("is-open-now", open);
     $$(".hours tr").forEach((tr) => tr.classList.toggle("is-today", Number(tr.dataset.day) === day));
   };
   updateOpenStatus();
@@ -258,7 +268,7 @@
         ${SERVICES.filter((s) => s.cat === key).map((s) => `
           <label class="svc-opt">
             <input class="visually-hidden" type="radio" name="service" value="${esc(s.name)}">
-            ${icon(s.icon)}<span>${esc(s.name)}</span>
+            <span class="svc-opt__mark" aria-hidden="true"></span><span>${esc(s.name)}</span>
           </label>`).join("")}
       </div>
     </fieldset>`).join("");
@@ -434,7 +444,7 @@
     if (n === 5) renderSummary();
     foot.hidden = n === 5;
     backBtn.hidden = n === 1;
-    nextBtn.innerHTML = n === 4 ? `Potvrdit rezervaci ${icon("check")}` : `Pokračovat ${icon("arrow")}`;
+    nextBtn.textContent = n === 4 ? "Potvrdit rezervaci" : "Pokračovat";
     refresh();
     if (focus) {
       const t = $(`.step[data-step="${n}"] .step__title`, wizard);
@@ -479,9 +489,9 @@
   ------------------------------------------------------------------ */
   const grid = $("#gallery-grid");
   grid.innerHTML = GALLERY.map((g, i) => `
-    <li ${i >= GALLERY_INITIAL ? "hidden" : ""}>
+    <li class="${i === 0 ? "is-feature" : g.tall ? "is-tall" : g.wide ? "is-wide" : ""}" ${i >= GALLERY_INITIAL ? "hidden" : ""}>
       <button type="button" class="g-item" data-index="${i}" aria-label="Zvětšit fotku: ${esc(g.alt)}">
-        <img src="${g.thumb}" width="${g.w}" height="${g.h}" alt="${esc(g.alt)}" loading="lazy" decoding="async">
+        <img src="${i === 0 ? g.full : g.thumb}" width="${g.w}" height="${g.h}" alt="${esc(g.alt)}" loading="lazy" decoding="async">
       </button>
     </li>`).join("");
 
@@ -490,7 +500,7 @@
     const expand = moreBtn.getAttribute("aria-expanded") !== "true";
     $$("li", grid).forEach((li, i) => { if (i >= GALLERY_INITIAL) li.hidden = !expand; });
     moreBtn.setAttribute("aria-expanded", String(expand));
-    moreBtn.textContent = expand ? "Zobrazit méně" : "Zobrazit všechny fotky";
+    moreBtn.textContent = expand ? "Zobrazit méně" : `Zobrazit všech ${GALLERY.length} fotografií`;
     if (expand) $$(".g-item", grid)[GALLERY_INITIAL].focus();
   });
 
